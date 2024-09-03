@@ -24,10 +24,20 @@ import {
     PopoverContent,
     PopoverTrigger,
 } from "@/components/ui/popover"
+import {
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogFooter,
+    DialogHeader,
+    DialogTitle,
+    DialogTrigger,
+} from "@/components/ui/dialog"  
 import { Send, Menu, ChevronDown, Plus, Key, Settings, Eraser } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useState } from "react";
 import { invoke } from "@tauri-apps/api";
+import { DialogClose } from "@radix-ui/react-dialog";
 
 interface MessageProps {
     id: number;
@@ -106,6 +116,7 @@ function App() {
         }
     ])
     const [conversation, setConversation] = useState<ConversationProps>(conversations[0])
+    const [addNewModelInput, setNewModelInput] = useState("")
     const [currentModel, setCurrentModel] = useState(models[0]);
     const [userInput, setUserInput] = useState("");
     const [responseLoading, setResponseLoading] = useState(false);
@@ -176,6 +187,20 @@ function App() {
         setConversations(conversations.map((conv) => conv.id === conversation.id ? conversation : conv));
     }
 
+    const addNewModel = (modelName: string) => {
+        if (modelName == "") return // Don't add empty models
+
+        const newModel = {
+            id: models.length,
+            name: modelName
+        }
+        const newModels = [...models, newModel];
+        setModels(newModels);
+        setCurrentModel(newModel)
+        
+        setNewModelInput("");
+    }
+
     const addConversation = () => {
         const conversationObject = 
         {
@@ -242,6 +267,7 @@ function App() {
                 </div>
                 <div className="flex flex-row items-center justify-center w-full">
                     <p className="w-max text-sm">You are now babbling to</p>
+                    <Dialog>
                         <DropdownMenu>
                             <DropdownMenuTrigger asChild>
                                 <Button variant="link" className="font-bold px-1 h-auto gap-1">
@@ -259,10 +285,12 @@ function App() {
                                         </DropdownMenuItem>
                                     ))}
                                     <DropdownMenuSeparator />
+                                    <DialogTrigger asChild>
                                         <DropdownMenuItem>
                                             <Plus className="mr-2 h-4 w-4" />
                                             <span>Add new model</span>
                                         </DropdownMenuItem>
+                                    </DialogTrigger>
                                     <DropdownMenuItem>
                                         <Settings className="mr-2 h-4 w-4" />
                                         <span>Manage models</span>
@@ -270,6 +298,25 @@ function App() {
                                 </DropdownMenuGroup>
                             </DropdownMenuContent>
                         </DropdownMenu>
+                        <DialogContent className="w-96">
+                            <DialogHeader>
+                                <DialogTitle className="font-sans">Add a new model</DialogTitle>
+                            </DialogHeader>
+                            <div className="flex flex-col py-2 gap-1.5">
+                                <Input value={addNewModelInput} onChange={(e) => setNewModelInput(e.target.value)} placeholder="openai-community/gpt2"></Input>
+                            </div>
+                            <DialogFooter>
+                                <div className="flex flex-col w-full gap-2">
+                                    <DialogClose asChild>
+                                        <Button className="w-full" variant={"default"} onClick={() => addNewModel(addNewModelInput)} type="submit">Add</Button>
+                                    </DialogClose>
+                                    <DialogClose asChild>
+                                        <Button type="button" variant={"secondary"}>Cancel</Button>
+                                    </DialogClose>
+                                </div>
+                            </DialogFooter>
+                        </DialogContent>
+                    </Dialog>
                 </div>
                 <div className="flex flex-row w-full me-2 justify-end">
                     <Popover>
