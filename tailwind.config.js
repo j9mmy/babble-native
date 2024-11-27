@@ -7,6 +7,31 @@ export default {
   ],
   theme: {
   	extend: {
+		colors: {
+			'text': 'hsl(63, 84%, 5%)',
+			'background': 'hsl(60, 9%, 98%)',
+			'primary': 'hsl(63, 86%, 51%)',
+			'secondary': 'hsl(24, 6%, 83%)',
+			'accent': 'hsl(30, 6%, 25%)',
+		},
+		fontSize: {
+			xs: '0.667rem',
+			sm: '0.750rem',
+			base: '1rem',
+			xl: '1.333rem',
+			'2xl': '1.777rem',
+			'3xl': '2.369rem',
+			'4xl': '3.158rem',
+			'5xl': '4.210rem',
+		},
+		fontFamily: {
+			heading: 'Syne',
+			body: '"Space Grotesk"',
+		},
+		fontWeight: {
+			normal: 400,
+			bold: 700,
+		},
   		borderRadius: {
   			lg: 'var(--radius)',
   			md: 'calc(var(--radius) - 2px)',
@@ -52,12 +77,23 @@ export default {
   				'3': 'hsl(var(--chart-3))',
   				'4': 'hsl(var(--chart-4))',
   				'5': 'hsl(var(--chart-5))'
+  			},
+  			sidebar: {
+  				DEFAULT: 'hsl(var(--sidebar-background))',
+  				foreground: 'hsl(var(--sidebar-foreground))',
+  				primary: 'hsl(var(--sidebar-primary))',
+  				'primary-foreground': 'hsl(var(--sidebar-primary-foreground))',
+  				accent: 'hsl(var(--sidebar-accent))',
+  				'accent-foreground': 'hsl(var(--sidebar-accent-foreground))',
+  				border: 'hsl(var(--sidebar-border))',
+  				ring: 'hsl(var(--sidebar-ring))'
   			}
   		}
   	}
   },
   plugins: [
-	require("tailwindcss-animate"),
-	require("@tailwindcss/typography"),
-],
+    require("tailwindcss-animate"),
+    require('@tailwindcss/typography')
+  ],
 }
+

@@ -1,349 +1,203 @@
-import { Message } from "@/components/message";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import {
-    DropdownMenu,
-    DropdownMenuContent,
-    DropdownMenuGroup,
-    DropdownMenuItem,
-    DropdownMenuLabel,
-    DropdownMenuSeparator,
-    DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
-import {
-    Sheet,
-    SheetClose,
-    SheetContent,
-    SheetDescription,
-    SheetHeader,
-    SheetTitle,
-    SheetTrigger,
-} from "@/components/ui/sheet"
-import {
-    Popover,
-    PopoverContent,
-    PopoverTrigger,
-} from "@/components/ui/popover"
-import {
-    Dialog,
-    DialogContent,
-    DialogDescription,
-    DialogFooter,
-    DialogHeader,
-    DialogTitle,
-    DialogTrigger,
-} from "@/components/ui/dialog"  
-import { Send, Menu, ChevronDown, Plus, Key, Settings, Eraser } from "lucide-react";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { useState } from "react";
-import { invoke } from "@tauri-apps/api";
-import { DialogClose } from "@radix-ui/react-dialog";
-
-interface MessageProps {
-    id: number;
-    conversationId: number;
-    message: string;
-    isAi: boolean;
-}
-
-interface HfResponse {
-    model: string;
-    generated_text: string;
-}
-
-type ModelProps = {
-    id: number,
-    name: string
-  }
-
-type ConversationProps = {
-    id: number;
-    name: string;
-    messages: MessageProps[];
-}
+import { KeyboardEvent, useRef, useState, useEffect, useCallback } from 'react'
+import { HfInference } from '@huggingface/inference';
+import { ScrollArea } from './components/ui/scroll-area';
+import { Button } from './components/ui/button';
+import ReactMarkdown from 'react-markdown';
+import './App.css'
+import { MoreHorizontal, Send } from 'lucide-react';
+import { useConversations, createConversation } from './context/ConversationContext';
+import { Textarea } from './components/ui/textarea';
+import { SidebarTrigger, useSidebar } from './components/ui/sidebar';
+import { useModel } from './context/ModelContext';
+import { load } from '@tauri-apps/plugin-store';
 
 function App() {
-    const [models, setModels] = useState<ModelProps[]>([
-        {
-        id: 0,
-        name: "mistralai/Mistral-7B-Instruct-v0.3",
-        },
-        {
-        id: 1,
-        name: "google/gemma-1.1-7b-it",
-        },
-        {
-        id: 2,
-        name: "openai-community/gpt2",
-        },
-    ])
-    const [conversations, setConversations] = useState<ConversationProps[]>([
-        {
-            id: 0,
-            name: "Greetings",
-            messages: [
-                {
-                    id: 0,
-                    conversationId: 0,
-                    message: "Hi, how are you?",
-                    isAi: false,
-                },
-                {
-                    id: 1,
-                    conversationId: 0,
-                    message: "I'm good, how about you?",
-                    isAi: true,
-                }
-            ]
-        },
-        {
-            id: 1,
-            name: "Tomato discussion",
-            messages: [
-                {
-                    id: 3,
-                    conversationId: 1,
-                    message: "Is tomato a fruit or a vegetable?",
-                    isAi: false,
-                },
-                {
-                    id: 4,
-                    conversationId: 1,
-                    message: "A tomato is a fruit. Knowledge is knowing that a tomato is a fruit. Wisdom is not putting it in a fruit salad.",
-                    isAi: true,
-                }
-            ]
-        }
-    ])
-    const [conversation, setConversation] = useState<ConversationProps>(conversations[0])
-    const [addNewModelInput, setNewModelInput] = useState("")
-    const [currentModel, setCurrentModel] = useState(models[0]);
-    const [userInput, setUserInput] = useState("");
-    const [responseLoading, setResponseLoading] = useState(false);
-    const [key, setKey] = useState("");
+  const [input, setInput] = useState('');
+  const [isProcessing, setIsprocessing] = useState(false);
+  const { activeModel } = useModel();
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+  const { 
+    conversations, 
+    setConversations, 
+    activeConversationId, 
+    setActiveConversationId,
+    activeConversation
+  } = useConversations();
+  const { isMobile } = useSidebar();
 
-    const sendMessage = async (message: string, isAi: boolean) => {
-        setResponseLoading(true);
-        setUserInput("");
-        
-        // Add a new message to the conversation and let the user know that the AI is thinking
-        const newMessage =  [
-            {
-                id: conversation.messages.length,
-                conversationId: conversation.id,
-                message: message,
-                isAi: isAi
-            },
-            {
-                id: conversation.messages.length + 1,
-                conversationId: conversation.id,
-                message: "Thinking...",
-                isAi: true
-            }
-        ]
-        let updatedMessages = [...conversation.messages, ...newMessage];
-        setConversation({ ...conversation, messages: updatedMessages });
-    
-        // System prompt for the AI to follow
-        const systemPrompt = `System: Always assist with care, respect, and truth. Respond with utmost utility yet securely. Avoid harmful, unethical, prejudiced, or negative content. Ensure replies promote fairness and positivity. Do not include "User: " in your responses. Only respond as the AI. \n\n`;
-        
-        // Concatenate all previous messages into a single prompt and label each message with their respective sender for better context
-        const conversationHistory = systemPrompt + updatedMessages.map((message) => {
-            return (message.isAi ? "AI: " : "User: ") + message.message;
-        }).join("\n");
-        console.log(conversationHistory);
-    
-        // Send the conversation history to the AI model and get a response
-        await invoke<HfResponse>('hf_request', { message: conversationHistory, model: currentModel.name, key: key })
-            .then((response) => {
-                // Clean up the response and avoid the AI speaking on behalf of the user
-                let trimmedGeneratedText = response.generated_text.trim();
-                const indexOfUser = trimmedGeneratedText.indexOf("User: ");
-                if (indexOfUser !== -1) {
-                    trimmedGeneratedText = trimmedGeneratedText.substring(0, indexOfUser);
-                }
+  const handleNewConversation = useCallback(() => {
+    const newConversation = createConversation();
+    setConversations(prevConversations => [...prevConversations, newConversation]);
+    setActiveConversationId(newConversation.id);
+  }, []);
 
-                // Replace the "Thinking..." message with the AI's response
-                updatedMessages[updatedMessages.length - 1].message = trimmedGeneratedText;
+  useEffect(() => {
+    if (messagesEndRef.current) {
+      messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
+    }
+  }, [{...activeConversation?.messages}]);
 
-                updateConversation(updatedMessages);
-                
-            })
-            .catch((error) => {
-                console.error(error);
-                updatedMessages[updatedMessages.length - 1].message = "An error occurred while processing your request.";
+  async function sendMessage() {
+    if (!input.trim()) return;
+    setInput('');
+    setIsprocessing(true);
 
-                updateConversation(updatedMessages);
-            });
-    
-        setResponseLoading(false);
+    const currentConversation = activeConversation ?? createConversation();
+    if (!activeConversationId) {
+      setActiveConversationId(currentConversation.id);
+      setConversations((prevConversations) => [...prevConversations, currentConversation]);
     }
 
-    const updateConversation = (updatedMessages: MessageProps[]) => {
-        // Update the active conversation with the new messages
-        setConversation({ ...conversation, messages: updatedMessages });
-
-        // Update the active conversation in the list of conversations
-        setConversations(conversations.map((conv) => conv.id === conversation.id ? conversation : conv));
+    const updatedConv = {
+      ...currentConversation,
+      messages: [
+        ...currentConversation.messages,
+        { role: 'user', content: input },
+        { role: 'assistant', content: '' }
+      ]
     }
 
-    const addNewModel = (modelName: string) => {
-        if (modelName == "") return // Don't add empty models
-
-        const newModel = {
-            id: models.length,
-            name: modelName
-        }
-        const newModels = [...models, newModel];
-        setModels(newModels);
-        setCurrentModel(newModel)
-        
-        setNewModelInput("");
-    }
-
-    const addConversation = () => {
-        const conversationObject = 
-        {
-            id: conversations.length,
-            name: "New Conversation",
-            messages: []
-        }
-
-        const newConversations = [...conversations, conversationObject]
-        setConversations(newConversations)
-        setConversation(conversationObject)
-    }
-
-
-    return (
-        <div className="flex flex-col h-screen py-2">
-            <header className="flex justify-between items-center p-2 pt-0">
-                <div className="flex gap-2 w-full">
-                    <Sheet>
-                        <SheetTrigger>
-                            <Button variant={"ghost"} size={"icon"}><Menu size={16}/></Button>
-                        </SheetTrigger>
-                        <SheetContent side={"left"} className="flex flex-col h-fit m-4 p-0 rounded-lg">
-                            <SheetHeader className="p-4 pb-0 pt-3">
-                                <SheetTitle className="font-bold">Babble</SheetTitle>
-                            </SheetHeader>
-                            <div className="w-full pb-2">
-                                <SheetClose asChild>
-                                    <Button 
-                                            className="flex flex-row gap-2 justify-start w-full mb-2 rounded-none"
-                                            variant={"ghost"}
-                                            onClick={() => addConversation()}
-                                        >
-                                            <Plus size={16}/>
-                                            New conversation
-                                    </Button>
-                                </SheetClose>
-                                {conversations.map((conversation, index) => (
-                                    <SheetClose asChild>
-                                        <Button 
-                                            className="w-full justify-start rounded-none font-normal" 
-                                            variant="ghost"
-                                            key={index}
-                                            onClick={() => setConversation(conversation)}
-                                        >
-                                            {conversation.name}
-                                        </Button>
-                                    </SheetClose>
-                            ))}
-                            </div>
-                        </SheetContent>
-                    </Sheet>
-                    <Button 
-                        size={"icon"} 
-                        variant={"ghost"}
-                        onClick={() => setConversation({
-                            id: conversation.id,
-                            name: conversation.name,
-                            messages: []
-                        })}
-                    >
-                        <Eraser size={16} />
-                    </Button>
-                </div>
-                <div className="flex flex-row items-center justify-center w-full">
-                    <p className="w-max text-sm">You are now babbling to</p>
-                    <Dialog>
-                        <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                                <Button variant="link" className="font-bold px-1 h-auto gap-1">
-                                    {currentModel.name}
-                                    <ChevronDown size={12} />
-                                </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent className="w-auto">
-                                <DropdownMenuLabel>Switch model</DropdownMenuLabel>
-                                <DropdownMenuSeparator />
-                                <DropdownMenuGroup>
-                                    {models.map((model, index) => (
-                                        <DropdownMenuItem key={index} onSelect={() => setCurrentModel(model)}>
-                                            <span>{model.name}</span>
-                                        </DropdownMenuItem>
-                                    ))}
-                                    <DropdownMenuSeparator />
-                                    <DialogTrigger asChild>
-                                        <DropdownMenuItem>
-                                            <Plus className="mr-2 h-4 w-4" />
-                                            <span>Add new model</span>
-                                        </DropdownMenuItem>
-                                    </DialogTrigger>
-                                    <DropdownMenuItem>
-                                        <Settings className="mr-2 h-4 w-4" />
-                                        <span>Manage models</span>
-                                    </DropdownMenuItem>
-                                </DropdownMenuGroup>
-                            </DropdownMenuContent>
-                        </DropdownMenu>
-                        <DialogContent className="w-96">
-                            <DialogHeader>
-                                <DialogTitle className="font-sans">Add a new model</DialogTitle>
-                            </DialogHeader>
-                            <div className="flex flex-col py-2 gap-1.5">
-                                <Input value={addNewModelInput} onChange={(e) => setNewModelInput(e.target.value)} placeholder="openai-community/gpt2"></Input>
-                            </div>
-                            <DialogFooter>
-                                <div className="flex flex-col w-full gap-2">
-                                    <DialogClose asChild>
-                                        <Button className="w-full" variant={"default"} onClick={() => addNewModel(addNewModelInput)} type="submit">Add</Button>
-                                    </DialogClose>
-                                    <DialogClose asChild>
-                                        <Button type="button" variant={"secondary"}>Cancel</Button>
-                                    </DialogClose>
-                                </div>
-                            </DialogFooter>
-                        </DialogContent>
-                    </Dialog>
-                </div>
-                <div className="flex flex-row w-full me-2 justify-end">
-                    <Popover>
-                        <PopoverTrigger>
-                            <Button size={"icon"} variant="ghost"><Key size={16}/></Button>
-                        </PopoverTrigger>
-                        <PopoverContent side={"bottom"} className="w-48">
-                            <Input type="password" value={key} onChange={(e) => setKey(e.target.value)} className="bg-stone-100" placeholder="Access Token" />
-                        </PopoverContent>
-                    </Popover>
-                </div>
-            </header>
-            <ScrollArea className="h-full">
-                <div className="flex flex-col gap-2 h-full max-w-screen-md mx-auto px-8 mb-8">
-                    {conversation.messages.map((message, index) => (
-                        <Message key={index} message={message.message} isAi={message.isAi} />
-                    ))}
-                </div>
-            </ScrollArea>
-            <footer className="flex justify-center items-center w-full p-2 pt-2">
-                <div className="flex flex-row max-w-screen-md w-full gap-2">
-                    <Input value={userInput} onChange={(e) => setUserInput(e.target.value)} className="bg-stone-100" placeholder={"Babble to " + currentModel.name} />
-                    <Button disabled={responseLoading} onClick={() => sendMessage(userInput, false)} className="p-3"><Send size={16}/></Button>
-                </div>
-            </footer>
-        </div>
+    setConversations((prevConversations) =>
+      prevConversations.map((conv) =>
+        conv.id === updatedConv.id ? updatedConv : conv
+      )
     );
+
+    const store = await load('token.dat', { autoSave: false });
+    const hf = new HfInference(await store.get('token'));
+
+    const stream = hf.chatCompletionStream({
+      model: activeModel,
+      messages: updatedConv.messages.slice(0, -1),
+      max_tokens: 1024,
+      temperature: 0.5,
+    });
+
+    try {
+      for await (const chunk of stream) {
+        if (!chunk.choices?.[0]?.delta?.content) continue;
+
+        setConversations((prevConversations) => {
+          const conv = prevConversations.find((conv) => conv.id === updatedConv.id);
+          if (!conv) return prevConversations;
+
+          return prevConversations.map((conv) =>
+            conv.id === updatedConv.id
+              ? {
+                  ...conv,
+                  messages: [
+                    ...conv.messages.slice(0, -1),
+                    {
+                      ...conv.messages[conv.messages.length - 1],
+                      content: conv.messages[conv.messages.length - 1].content + chunk.choices[0].delta.content
+                    }
+                  ]
+              }
+              : conv
+          );
+        })
+      }
+    } catch (error) {
+      console.error(error);
+      setConversations((prevConversations) => {
+        const conv = prevConversations.find((conv) => conv.id === updatedConv.id);
+        if (!conv) return prevConversations;
+
+        return prevConversations.map((conv) =>
+          conv.id === updatedConv.id
+            ? {
+                ...conv,
+                messages: [
+                  ...conv.messages.slice(0, -1),
+                  {
+                    ...conv.messages[conv.messages.length - 1],
+                    content: conv.messages[conv.messages.length - 1].content + 'An error occurred while processing your request. Check if your access token is valid and try again.'
+                  }
+                ]
+            }
+            : conv
+        );
+      });
+    }
+
+    setIsprocessing(false);
+  }
+
+  function handleEnterKeyPress(e: KeyboardEvent<HTMLTextAreaElement>) {
+    if (e.key === 'Enter' && !e.shiftKey && !isProcessing && input.trim().length > 0) {
+      sendMessage();
+
+      const textArea = document.querySelector('textarea');
+      if (textArea) {
+        textArea.focus();
+        textArea.style.height = '36px';
+      }
+    }
+
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+    }
+  }
+
+  function handleTextArea(e: React.ChangeEvent<HTMLTextAreaElement>) {
+      setInput(e.target.value);
+      e.target.style.height = '36px';
+      e.target.style.height = (e.target.scrollHeight + 1.5) + 'px';
+    }
+
+  return (
+    <div className={`w-full max-h-screen p-2 ${!isMobile && "ps-0"}`}>
+      <div className="flex flex-col h-full w-full bg-background shadow-md rounded-lg border border-sidebar-border">
+        <div className='flex flex-col md:flex-row justify-center items-center text-sm p-2 md:p-4 relative'>
+          <p>You are now babbling to</p>
+          <strong className='ms-1'>{activeModel}</strong>
+        </div>
+        {activeConversation == null || activeConversation.messages.length < 2 ? (
+          <div className='flex flex-col h-full justify-end items-center text-sm text-muted-foreground animate-pulse p-2 md:p-4'>
+            <p>Send a message to start babbling</p>
+          </div>
+        ) : (
+          <ScrollArea className="flex flex-col h-full w-full">
+            <div className='flex flex-col gap-4 max-w-screen-md px-2 mx-auto'>
+              {activeConversation.messages.slice(1).map((message, index) => (
+                <div 
+                  key={index} 
+                  className={`flex flex-col gap-2 mb-0 ${message.role === 'assistant' ? 'self-start' : 'self-end'} ${index == activeConversation.messages.length - 2 ? 'md:mb-8' : ''}`}
+                >
+                  <strong className={`text-xs ${message.role === 'assistant' ? 'self-start' : 'self-end'}`}>{message.role}</strong>
+                  <div className={`no-margin flex flex-col gap-2 ${message.role === 'assistant' ? 'assistant-message' : 'user-message'}`}>
+                    {message.content.length == 0 ? (
+                      <MoreHorizontal className='animate-pulse'/>
+                    ) : (
+                      <ReactMarkdown>{message.content}</ReactMarkdown>
+                    )}
+                  </div>
+                  <div ref={messagesEndRef} />
+                </div>
+              ))}
+            </div>
+          </ScrollArea>
+        )}
+        <div className="flex gap-2 w-full self-center p-2 max-w-screen-md">
+          <SidebarTrigger />
+          <Textarea 
+            placeholder={"Babble to " + activeModel}
+            value={input}
+            className='h-9 max-h-20 w-full bg-primary-foreground shadow-sm focus-visible:ring-0 resize-none'
+            onChange={(e) => handleTextArea(e)}
+            onKeyDown={(e) => handleEnterKeyPress(e)}
+          />
+          <Button 
+            disabled={input.trim() ===  '' || isProcessing} 
+            onClick={() => sendMessage()} 
+            className="h-9 w-9 shadow-sm transition"
+          >
+            <Send/>
+          </Button>
+        </div>
+      </div>
+    </div>
+  )
 }
 
 export default App;
