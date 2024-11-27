@@ -183,7 +183,7 @@ function App() {
           <Textarea 
             placeholder={"Babble to " + activeModel}
             value={input}
-            className='h-9 max-h-20 w-full bg-primary-foreground shadow-sm focus-visible:ring-0 resize-none'
+            className='h-9 max-h-20 w-full bg-sidebar shadow-sm focus-visible:ring-0 resize-none'
             onChange={(e) => handleTextArea(e)}
             onKeyDown={(e) => handleEnterKeyPress(e)}
           />
