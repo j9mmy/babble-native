@@ -3,7 +3,7 @@
 <h4 align="center" > A Tauri v2 desktop application for chatting with Hugging Face's language models.</h4>
 
 <div align="center">
-    <img src="./docs/out.gif" height=480 alt="showcase">
+    <img src="./docs/out.gif" alt="showcase">
 </div>
 
 ## Usage
