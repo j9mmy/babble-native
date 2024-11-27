@@ -46,7 +46,6 @@ export function AppSidebar() {
           </SidebarMenuItem>
           <ChangeModelMenuItem />
           <ChangeAccessTokenMenuItem />
-          <SettingsMenuItem />
         </SidebarMenu>
       </SidebarFooter>
 
