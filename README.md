@@ -1,10 +1,15 @@
-# Babble
+<h1 align="center" >Babble</h1>
 
-My little side-project that allows you to converse with various models from Hugging Face, all within a single application. Built using Tauri v2. It's still a work in progress, so more features are expected to come!
+<h4 align="center" > A Tauri v2 desktop application for chatting with Hugging Face's language models.</h4>
 
-*Currently relies on [huggingface.js](https://github.com/huggingface/huggingface.js). As it relies on inference, you will need to find a model that supports inference. You can find a list of **warm models**[^1] [here](https://huggingface.co/models?inference=warm&pipeline_tag=text-generation). If the options don't satisfy you, you could try browsing the list of **cold models**[^2] [here](https://huggingface.co/models?inference=cold&pipeline_tag=text-generation).*
+<div align="center">
+    <img src="./docs/out.gif" height=480 alt="showcase">
+</div>
 
 ## Usage
+
+> [!IMPORTANT]  
+> **Currently relies on inference through [huggingface.js](https://github.com/huggingface/huggingface.js). As it relies on inference, you will need to find a model that supports inference. You can find a list of **warm models**[^1] [here](https://huggingface.co/models?inference=warm&pipeline_tag=text-generation). If the options don't satisfy you, you could try browsing the list of **cold models**[^2] [here](https://huggingface.co/models?inference=cold&pipeline_tag=text-generation).**
 
 1. **Enter your [user access token](https://huggingface.co/docs/hub/security-tokens)**: Click on the access token button labeled with a key icon within the left sidebar to enter your access token. This is required to not be rate limited.
 2. **Send a message**: Enter your message and start babbling.
