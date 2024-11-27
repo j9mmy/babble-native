@@ -6,7 +6,7 @@ My little side-project that allows you to converse with various models from Hugg
 
 ## Usage
 
-1. **Enter your [user access token](https://huggingface.co/docs/hub/security-tokens)**: Click on the key icon to enter your Token for accessing the AI models.
+1. **Enter your [user access token](https://huggingface.co/docs/hub/security-tokens)**: Click on the access token button labeled with a key icon within the left sidebar to enter your access token. This is required to not be rate limited.
 2. **Send a message**: Enter your message and start babbling.
 
 ## Features
