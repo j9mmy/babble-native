@@ -147,7 +147,7 @@ function App() {
 
   return (
     <div className={`w-full max-h-screen p-2 ${!isMobile && "ps-0"}`}>
-      <div className="flex flex-col h-full w-full bg-background shadow-md rounded-lg border border-sidebar-border">
+      <div className="flex flex-col h-full w-full bg-background shadow rounded-lg border border-sidebar-border">
         <div className='flex flex-col md:flex-row justify-center items-center text-sm p-2 md:p-4 relative'>
           <p>You are now babbling to</p>
           <strong className='ms-1'>{activeModel}</strong>
