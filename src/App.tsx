@@ -10,6 +10,7 @@ import { Textarea } from './components/ui/textarea';
 import { SidebarTrigger, useSidebar } from './components/ui/sidebar';
 import { useModel } from './context/ModelContext';
 import { load } from '@tauri-apps/plugin-store';
+import { getCurrentWindow } from '@tauri-apps/api/window';
 
 function App() {
   const [input, setInput] = useState('');
@@ -36,6 +37,14 @@ function App() {
       messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
     }
   }, [{...activeConversation?.messages}]);
+
+  useEffect(() => {
+    const showWindow = async () => {
+      await getCurrentWindow().show();
+    };
+    
+    showWindow();
+  }, []);
 
   async function sendMessage() {
     if (!input.trim()) return;
