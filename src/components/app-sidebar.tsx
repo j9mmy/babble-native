@@ -22,6 +22,7 @@ import { ModeToggle } from "./mode-toggle"
 import { useModal } from "../context/ModalContext"
 
 export function AppSidebar() {
+  const { state } = useSidebar();
   
   return (
     <Sidebar side="left" variant="floating" collapsible="icon" className="font-medium">
@@ -31,7 +32,7 @@ export function AppSidebar() {
           <SidebarGroupContent>
             <SidebarMenu>
               <NewConversationMenuItem />
-              <ConversationsMenuItem />
+              {state === "expanded" && <ConversationsMenuItem /> }
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
