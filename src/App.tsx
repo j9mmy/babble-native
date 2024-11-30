@@ -8,6 +8,8 @@ import { useConversations } from './context/ConversationContext';
 import { Textarea } from './components/ui/textarea';
 import { SidebarTrigger, useSidebar } from './components/ui/sidebar';
 import { useModel } from './context/ModelContext';
+import { load } from '@tauri-apps/plugin-store';
+import { getCurrentWindow } from '@tauri-apps/api/window';
 
 function App() {
   const { activeConversation, sendMessage } = useConversations();
@@ -22,6 +24,14 @@ function App() {
       messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
     }
   }, [{...activeConversation?.messages}]);
+
+  useEffect(() => {
+    const showWindow = async () => {
+      await getCurrentWindow().show();
+    };
+    
+    showWindow();
+  }, []);
 
   function handleSendMessage() {
     if (!input.trim()) return;
