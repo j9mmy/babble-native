@@ -1,35 +1,21 @@
-import { KeyboardEvent, useRef, useState, useEffect, useCallback } from 'react'
-import { HfInference } from '@huggingface/inference';
+import { KeyboardEvent, useRef, useState, useEffect } from 'react'
 import { ScrollArea } from './components/ui/scroll-area';
 import { Button } from './components/ui/button';
 import ReactMarkdown from 'react-markdown';
 import './App.css'
 import { MoreHorizontal, Send } from 'lucide-react';
-import { useConversations, createConversation } from './context/ConversationContext';
+import { useConversations } from './context/ConversationContext';
 import { Textarea } from './components/ui/textarea';
 import { SidebarTrigger, useSidebar } from './components/ui/sidebar';
 import { useModel } from './context/ModelContext';
-import { load } from '@tauri-apps/plugin-store';
 
 function App() {
+  const { activeConversation, sendMessage } = useConversations();
+  const { activeModel } = useModel();
+  const { isMobile } = useSidebar();
   const [input, setInput] = useState('');
   const [isProcessing, setIsprocessing] = useState(false);
-  const { activeModel } = useModel();
   const messagesEndRef = useRef<HTMLDivElement>(null);
-  const { 
-    conversations, 
-    setConversations, 
-    activeConversationId, 
-    setActiveConversationId,
-    activeConversation
-  } = useConversations();
-  const { isMobile } = useSidebar();
-
-  const handleNewConversation = useCallback(() => {
-    const newConversation = createConversation();
-    setConversations(prevConversations => [...prevConversations, newConversation]);
-    setActiveConversationId(newConversation.id);
-  }, []);
 
   useEffect(() => {
     if (messagesEndRef.current) {
@@ -37,95 +23,19 @@ function App() {
     }
   }, [{...activeConversation?.messages}]);
 
-  async function sendMessage() {
+  function handleSendMessage() {
     if (!input.trim()) return;
     setInput('');
     setIsprocessing(true);
 
-    const currentConversation = activeConversation ?? createConversation();
-    if (!activeConversationId) {
-      setActiveConversationId(currentConversation.id);
-      setConversations((prevConversations) => [...prevConversations, currentConversation]);
-    }
-
-    const updatedConv = {
-      ...currentConversation,
-      messages: [
-        ...currentConversation.messages,
-        { role: 'user', content: input },
-        { role: 'assistant', content: '' }
-      ]
-    }
-
-    setConversations((prevConversations) =>
-      prevConversations.map((conv) =>
-        conv.id === updatedConv.id ? updatedConv : conv
-      )
-    );
-
-    const store = await load('token.dat', { autoSave: false });
-    const hf = new HfInference(await store.get('token'));
-
-    const stream = hf.chatCompletionStream({
-      model: activeModel,
-      messages: updatedConv.messages.slice(0, -1),
-      max_tokens: 1024,
-      temperature: 0.5,
-    });
-
-    try {
-      for await (const chunk of stream) {
-        if (!chunk.choices?.[0]?.delta?.content) continue;
-
-        setConversations((prevConversations) => {
-          const conv = prevConversations.find((conv) => conv.id === updatedConv.id);
-          if (!conv) return prevConversations;
-
-          return prevConversations.map((conv) =>
-            conv.id === updatedConv.id
-              ? {
-                  ...conv,
-                  messages: [
-                    ...conv.messages.slice(0, -1),
-                    {
-                      ...conv.messages[conv.messages.length - 1],
-                      content: conv.messages[conv.messages.length - 1].content + chunk.choices[0].delta.content
-                    }
-                  ]
-              }
-              : conv
-          );
-        })
-      }
-    } catch (error) {
-      console.error(error);
-      setConversations((prevConversations) => {
-        const conv = prevConversations.find((conv) => conv.id === updatedConv.id);
-        if (!conv) return prevConversations;
-
-        return prevConversations.map((conv) =>
-          conv.id === updatedConv.id
-            ? {
-                ...conv,
-                messages: [
-                  ...conv.messages.slice(0, -1),
-                  {
-                    ...conv.messages[conv.messages.length - 1],
-                    content: conv.messages[conv.messages.length - 1].content + 'An error occurred while processing your request. Check if your access token is valid and try again.'
-                  }
-                ]
-            }
-            : conv
-        );
-      });
-    }
+    sendMessage(input, activeModel);
 
     setIsprocessing(false);
   }
 
   function handleEnterKeyPress(e: KeyboardEvent<HTMLTextAreaElement>) {
     if (e.key === 'Enter' && !e.shiftKey && !isProcessing && input.trim().length > 0) {
-      sendMessage();
+      handleSendMessage();
 
       const textArea = document.querySelector('textarea');
       if (textArea) {
@@ -189,7 +99,7 @@ function App() {
           />
           <Button 
             disabled={input.trim() ===  '' || isProcessing} 
-            onClick={() => sendMessage()} 
+            onClick={() => handleSendMessage()} 
             className="h-9 w-9 shadow-sm transition"
           >
             <Send/>
