@@ -138,24 +138,41 @@ function DeleteConversationForm({conversationId, onClose}: {conversationId: stri
 }
 
 function ChangeModelForm({onClose}: {onClose: () => void}) {
-    const { activeModel, setActiveModel } = useModel();
+    const { activeModel, setModel, loadModel } = useModel();
     const [input, setInput] = useState<string>(activeModel);
+    const [invalidInput, setInvalidInput] = useState<boolean>(false);
 
-    function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
+    async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
         e.preventDefault();
 
-        if (!input.trim()) {
+        try {
+            await setModel(input);
+            await loadModel();
+        } catch (error) {
+            console.error(error);
+            setInvalidInput(true);
             return;
         }
-        
-        setActiveModel(input);
+
         onClose();
+    }
+
+    function handleInputChange(e: React.ChangeEvent<HTMLInputElement>) {
+        setInput(e.target.value);
+        setInvalidInput(false);
     }
 
     return (
         <form onSubmit={handleSubmit} className={"grid gap-4"}>
             <div className="grid gap-2 mt-1">
-                <Input type="input" placeholder="microsoft/Phi-3.5-mini-instruct" value={input} onChange={(e) => setInput(e.target.value)} />
+                <Input 
+                    type="input" 
+                    placeholder="openai-community/gpt2" 
+                    value={input} 
+                    onChange={(e) => handleInputChange(e)}
+                    className={invalidInput ? 'border-red-500' : ''}
+                />
+                {invalidInput && <p className="text-red-500 text-sm">Invalid model name</p>}
             </div>
             <div className="grid gap-2">
                 <Button type="submit">Save changes</Button>
