@@ -2,7 +2,7 @@ import React, { createContext, useState, useContext, ReactNode, useMemo, useCall
 import { load } from '@tauri-apps/plugin-store';
 import { HfInference } from '@huggingface/inference';
 
-interface MessagesType {
+export interface MessageType {
     role: string;
     content: string;
 }
@@ -10,7 +10,7 @@ interface MessagesType {
 export interface ConversationType {
     id: string;
     title: string;
-    messages: MessagesType[];
+    messages: MessageType[];
 }
 
 interface ConversationContextType {
