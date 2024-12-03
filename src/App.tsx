@@ -37,16 +37,21 @@ function App() {
 function Header() {
   const { activeModel } = useModel();
 
-  return(
+  return (
     <div className='flex flex-col md:flex-row justify-center items-center text-sm p-2 md:p-4 relative'>
-      <p>You are now babbling to</p>
-      <strong className='ms-1'>{activeModel}</strong>
+      {activeModel.trim() != '' && (
+        <>
+          <p>You are now babbling to</p>
+          <strong className='ms-1'>{activeModel}</strong>
+        </>
+      )}
     </div>
   )
 }
 
 function Messages() {
   const { activeConversation } = useConversations();
+  const { activeModel } = useModel();
   const messagesEndRef = useRef<HTMLDivElement>(null);
   
   useEffect(() => {
@@ -59,7 +64,11 @@ function Messages() {
     activeConversation == null || activeConversation.messages.length < 2 ? 
     (
       <div className='flex flex-col h-full justify-end items-center text-sm text-muted-foreground animate-pulse p-2 md:p-4'>
-        <p>Send a message to start babbling</p>
+        {activeModel.trim() === '' ? (
+          <strong className='text-destructive'>Please input a model to start babbling.</strong>
+        ) : (
+          <p>Send a message to start babbling</p>
+        )}
       </div>
     ) 
     : 
@@ -130,7 +139,8 @@ function Footer() {
     <div className="flex gap-2 w-full self-center p-2 max-w-screen-md">
       <SidebarTrigger />
       <Textarea 
-        placeholder={"Babble to " + activeModel}
+        placeholder={activeModel.trim() === '' ? ("") : ("Babble to " + activeModel)}
+        disabled={activeModel.trim() === ''}
         value={input}
         className='h-9 max-h-20 w-full bg-sidebar shadow-sm focus-visible:ring-0 resize-none'
         onChange={(e) => handleTextArea(e)}
