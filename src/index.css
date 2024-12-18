@@ -3,89 +3,28 @@
 @tailwind utilities;
 
 @layer base {
-
   html {
-    font-family: theme('fontFamily.body');
+    font-family: theme("fontFamily.body");
   }
 
-  h1, h2, h3, h4, h5, h6 {
-    font-family: theme('fontFamily.heading');
-  }
-  
-  @font-face {
-    font-family: 'Syne';
-    src: url('./assets/fonts/Syne-VariableFont_wght.ttf') format('truetype');
-  }
-  
-  @font-face {
-    font-family: 'Space Grotesk';
-    src: url('./assets/fonts/SpaceGrotesk-VariableFont_wght.ttf') format('truetype');
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    font-family: theme("fontFamily.heading");
   }
 
   @font-face {
-    font-family: 'Hind';
-    src: url('./assets/fonts/Hind/Hind-Light.ttf') format('truetype');
-    font-weight: 300;
+    font-family: "Syne";
+    src: url("./assets/fonts/Syne-VariableFont_wght.ttf") format("truetype");
   }
 
   @font-face {
-    font-family: 'Hind';
-    src: url('./assets/fonts/Hind/Hind-Regular.ttf') format('truetype');
-    font-weight: 400;
-  }
-
-  @font-face {
-    font-family: 'Hind';
-    src: url('./assets/fonts/Hind/Hind-Medium.ttf') format('truetype');
-    font-weight: 500;
-  }
-
-  @font-face {
-    font-family: 'Hind';
-    src: url('./assets/fonts/Hind/Hind-SemiBold.ttf') format('truetype');
-    font-weight: 600;
-  }
-
-  @font-face {
-    font-family: 'Hind';
-    src: url('./assets/fonts/Hind/Hind-Bold.ttf') format('truetype');
-    font-weight: 700;
-  }
-
-  @font-face {
-    font-family: 'Bai Jamjuree';
-    src: url(./assets/fonts/BaiJamjuree/BaiJamjuree-ExtraLight.ttf) format('truetype');
-    font-weight: 200;
-  }
-
-  @font-face {
-    font-family: 'Bai Jamjuree';
-    src: url(./assets/fonts/BaiJamjuree/BaiJamjuree-Light.ttf) format('truetype');
-    font-weight: 300;
-  }
-
-  @font-face {
-    font-family: 'Bai Jamjuree';
-    src: url(./assets/fonts/BaiJamjuree/BaiJamjuree-Regular.ttf) format('truetype');
-    font-weight: 400;
-  }
-
-  @font-face {
-    font-family: 'Bai Jamjuree';
-    src: url(./assets/fonts/BaiJamjuree/BaiJamjuree-Medium.ttf) format('truetype');
-    font-weight: 500;
-  }
-
-  @font-face {
-    font-family: 'Bai Jamjuree';
-    src: url(./assets/fonts/BaiJamjuree/BaiJamjuree-SemiBold.ttf) format('truetype');
-    font-weight: 600;
-  }
-
-  @font-face {
-    font-family: 'Bai Jamjuree';
-    src: url(./assets/fonts/BaiJamjuree/BaiJamjuree-Bold.ttf) format('truetype');
-    font-weight: 700;
+    font-family: "Space Grotesk";
+    src: url("./assets/fonts/SpaceGrotesk-VariableFont_wght.ttf")
+      format("truetype");
   }
 
   :root {
@@ -149,7 +88,7 @@
     --chart-4: 280 65% 60%;
     --chart-5: 340 75% 55%;
     --sidebar-background: 24 9.8% 10%;
-    --sidebar-foreground: 60 4.8% 95.9%; 
+    --sidebar-foreground: 60 4.8% 95.9%;
     --sidebar-primary: 224.3 76.3% 48%;
     --sidebar-primary-foreground: 0 0% 100%;
     --sidebar-accent: 12 6.5% 15.1%;
@@ -170,17 +109,15 @@
 
 @layer components {
   .user-message {
-    @apply 
-      items-end self-end
+    @apply items-end self-end
       w-fit max-w-screen-sm
       px-4 py-2 rounded-sm 
       prose prose-stone prose-sm
       text-secondary bg-primary;
   }
-  
+
   .assistant-message {
-    @apply 
-      items-start
+    @apply items-start
       w-fit max-w-screen-sm 
       px-4 py-2 rounded-sm 
       prose prose-stone prose-sm

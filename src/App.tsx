@@ -2,7 +2,6 @@ import { KeyboardEvent, useRef, useState, useEffect } from 'react'
 import { ScrollArea } from './components/ui/scroll-area';
 import { Button } from './components/ui/button';
 import ReactMarkdown from 'react-markdown';
-import './App.css'
 import { MoreHorizontal, Send } from 'lucide-react';
 import { useConversations } from './context/ConversationContext';
 import { Textarea } from './components/ui/textarea';
