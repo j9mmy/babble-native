@@ -1,8 +1,7 @@
 import * as React from "react"
 import * as DialogPrimitive from "@radix-ui/react-dialog"
-import { Cross2Icon } from "@radix-ui/react-icons"
-
 import { cn } from "@/lib/utils"
+import { useIsMobile } from "../../hooks/use-mobile"
 
 const Dialog = DialogPrimitive.Root
 
@@ -57,7 +56,7 @@ const DialogHeader = ({
 }: React.HTMLAttributes<HTMLDivElement>) => (
   <div
     className={cn(
-      "flex flex-col space-y-1.5 text-center sm:text-left",
+      "grid gap-2",
       className
     )}
     {...props}
@@ -82,28 +81,36 @@ DialogFooter.displayName = "DialogFooter"
 const DialogTitle = React.forwardRef<
   React.ElementRef<typeof DialogPrimitive.Title>,
   React.ComponentPropsWithoutRef<typeof DialogPrimitive.Title>
->(({ className, ...props }, ref) => (
-  <DialogPrimitive.Title
-    ref={ref}
-    className={cn(
-      "text-lg font-semibold leading-none tracking-tight",
-      className
-    )}
-    {...props}
+>(({ className, ...props }, ref) => {
+  const isMobile = useIsMobile()
+
+  return (
+    <DialogPrimitive.Title
+      ref={ref}
+      className={cn(
+        "text-lg font-bold leading-none tracking-tight",
+        isMobile && "mt-2 text-lg text-center",
+        className
+      )}
+      {...props}
   />
-))
+)})
 DialogTitle.displayName = DialogPrimitive.Title.displayName
 
 const DialogDescription = React.forwardRef<
   React.ElementRef<typeof DialogPrimitive.Description>,
   React.ComponentPropsWithoutRef<typeof DialogPrimitive.Description>
->(({ className, ...props }, ref) => (
-  <DialogPrimitive.Description
+>(({ className, ...props }, ref) => {
+  const isMobile = useIsMobile()
+
+  return (<DialogPrimitive.Description
     ref={ref}
-    className={cn("text-sm text-muted-foreground", className)}
+    className={cn("text-sm text-muted-foreground",
+      isMobile && "text-center"
+      , className)}
     {...props}
   />
-))
+)})
 DialogDescription.displayName = DialogPrimitive.Description.displayName
 
 export {

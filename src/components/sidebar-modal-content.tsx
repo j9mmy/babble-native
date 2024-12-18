@@ -37,10 +37,10 @@ export function SidebarModalHandler() {
                 
                 return (
                     <>
-                        <DialogHeader className='gap-1.5'>
+                        <DialogHeader>
                             <DialogTitle>Are you absolutely sure?</DialogTitle>
                             <DialogDescription>
-                                This action cannot be undone. This will permanently delete your conversation.
+                                This action cannot be undone.
                             </DialogDescription>
                         </DialogHeader>
                         <DeleteConversationForm
@@ -86,7 +86,7 @@ export function SidebarModalHandler() {
     return (
         <Dialog open={isOpen} onOpenChange={handleCloseModal}>
             <AppSidebar />
-            <DialogContent className="sm:max-w-[425px]">
+            <DialogContent className='w-96'>
                 <ModalContent />
             </DialogContent>
         </Dialog>
@@ -130,9 +130,9 @@ function DeleteConversationForm({conversationId, onClose}: {conversationId: stri
     }
 
     return (
-        <form onSubmit={handleSubmit} className='flex justify-end gap-2'>
+        <form onSubmit={handleSubmit} className='grid gap-2'>
+            <Button type="submit" variant={'destructive'}>Delete conversation</Button>
             <Button type='button' onClick={() => onClose()} variant={'outline'}>Cancel</Button>
-            <Button type="submit" variant={'default'}>Continue</Button>
         </form>
     );
 }
