@@ -22,7 +22,7 @@ import { ModeToggle } from "./mode-toggle"
 import { useModal } from "../context/ModalContext"
 
 export function AppSidebar() {
-  const { state } = useSidebar();
+  const { open, openMobile } = useSidebar();
   
   return (
     <Sidebar side="left" variant="floating" collapsible="icon" className="font-medium">
@@ -32,7 +32,7 @@ export function AppSidebar() {
           <SidebarGroupContent>
             <SidebarMenu>
               <NewConversationMenuItem />
-              {state === "expanded" && <ConversationsMenuItem /> }
+              {(open || openMobile)  && <ConversationsMenuItem /> }
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
@@ -109,7 +109,7 @@ function ConversationsMenuSubItems() {
 
   return (
     conversations.length > 0 ? (
-      <SidebarMenuSub className="gap-1 pe-0 me-0 overflow-x-clip">
+      <SidebarMenuSub className="gap-1 pe-0 me-0 overflow-x-clip font-normal">
         {[...conversations].reverse().map((conv) => (
           <SidebarMenuItem key={conv.id}>
             <SidebarMenuSubButton 
